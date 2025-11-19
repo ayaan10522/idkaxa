@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arena Player App</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* --- CSS STYLES --- */
+        body {
+            margin: 0;
+            padding: 0; 
+            height: 100vh;
+            /* Removed flex centering for full screen */
+            background-color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Added min-width to ensure app-screen is readable on desktop */
+            min-width: 320px; 
+        }
+
+        /* Adjusted app-screen to be the main container filling the body */
+        .app-screen {
+            background-color: #111111;
+            width: 100%; 
+            height: 100%;
+            /* Removed border-radius as it's full-screen now */
+            border-radius: 0; 
+            display: flex; 
+            flex-direction: column;
+            overflow: hidden; 
+            position: relative; 
+            color: white;
+            /* Added max-width for better experience on very wide screens */
+            max-width: 500px;
+            margin: 0 auto; /* Center on wider screens */
+        }
+
+        .scroll-content {
+            flex: 1;
+            overflow-y: auto; 
+            overflow-x: hidden;
+            padding: 20px; 
+            padding-bottom: 140px; 
+            display: none; 
+            flex-direction: column;
+        }
+        .scroll-content.active { display: flex;
+        }
+        .scroll-content::-webkit-scrollbar { display: none;
+        }
+
+        /* Headers & Icons */
+        h1, h2, h3 { margin: 0;
+        }
+        .header-row {
+            display: flex;
+            align-items: center; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            padding-top: 10px; 
+            flex-shrink: 0;
+        }
+        .logo-icon svg { fill: white; width: 24px; height: 24px; transform: rotate(-15deg);
+        }
+        .link-text { color: #3e8e41; font-size: 14px; text-align: center; margin-top: 15px; cursor: pointer;
+            text-decoration: underline; }
+
+        /* Inputs */
+        .input-field {
+            width: 100%;
+            padding: 16px; 
+            border-radius: 15px; 
+            border: 1px solid #333; 
+            background: #2b2b2b; 
+            color: white; 
+            margin-bottom: 12px; 
+            outline: none;
+            box-sizing: border-box; 
+            font-size: 15px;
+        }
+        .input-label { font-size: 12px; color: #888; margin-bottom: 4px; margin-left: 4px;
+        }
+        
+        /* Buttons */
+        .btn-primary {
+            width: 100%;
+            padding: 16px; 
+            border-radius: 30px; 
+            border: none;
+            background: white; 
+            color: black; 
+            font-weight: 600; 
+            cursor: pointer; 
+            font-size: 16px; 
+            margin-top: 10px;
+        }
+        .btn-green { background: #3e8e41; color: white;
+            box-shadow: 0 4px 15px rgba(62, 142, 65, 0.4); }
+        .btn-sm { padding: 8px 16px;
+            border-radius: 20px; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 13px; 
+            font-weight: 500;
+        }
+        
+        /* Components */
+        .card { background-color: #2b2b2b;
+            padding: 20px; 
+            border-radius: 20px; 
+            margin-bottom: 15px; }
+        
+        /* Table Select */
+        .table-select-container {
+            background: #222;
+            padding: 15px; 
+            border-radius: 15px; 
+            margin-bottom: 15px; 
+            border: 1px solid #333;
+        }
+        .styled-select {
+            width: 100%;
+            background: #333; 
+            color: white; 
+            border: none; 
+            padding: 12px; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            outline: none;
+        }
+
+        /* Calendar */
+        .calendar-strip {
+            display: flex;
+            gap: 10px; 
+            overflow-x: auto; 
+            padding-bottom: 10px; 
+            margin-bottom: 10px; 
+            flex-shrink: 0; 
+            min-height: 70px;
+        }
+        .calendar-strip::-webkit-scrollbar { display: none;
+        }
+        .cal-day {
+            min-width: 55px;
+            background: #2b2b2b; 
+            border-radius: 12px; 
+            padding: 10px 0; 
+            text-align: center; 
+            cursor: pointer; 
+            flex-shrink: 0; 
+            border: 1px solid #333;
+        }
+        .cal-day.selected { background: #3e8e41; color: white; border-color: #3e8e41;
+        }
+
+        /* Slots */
+        .slot-item {
+            background: #2b2b2b;
+            padding: 16px; 
+            border-radius: 16px; 
+            margin-bottom: 12px;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            cursor: pointer; 
+            border: 2px solid transparent;
+        }
+        .slot-item.selected { border-color: #3e8e41; background: #1b3320;
+        }
+        
+        /* Slot States */
+        .slot-item.full { opacity: 0.5;
+            pointer-events: none; filter: grayscale(1); }
+        .slot-item.maintenance { opacity: 0.6; pointer-events: none;
+            border: 1px solid #d32f2f; background: #2a1111; }
+        .slot-item.blocked { opacity: 0.4; pointer-events: none;
+        }
+
+        .slot-details div:first-child { font-weight: 600; font-size: 16px;
+        }
+        .slot-details div:last-child { font-size: 12px; color: #aaa; margin-top: 4px;
+        }
+        
+        .status-badge {
+            background: #333;
+            padding: 4px 8px; 
+            border-radius: 6px; 
+            font-size: 11px; 
+            color: #fff;
+        }
+        .status-badge.low { color: #ff4d6d;
+        }
+        .status-badge.maint { background: #d32f2f; color: white;
+        }
+
+        /* Warnings */
+        .warning-banner {
+            background: #d32f2f;
+            color: white; 
+            padding: 12px; 
+            border-radius: 12px; 
+            margin-bottom: 15px; 
+            font-size: 13px; 
+            display: none; 
+            text-align: center;
+        }
+
+        /* Bottom Action Bar */
+        #action_bar {
+            position: absolute;
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            padding: 20px; 
+            padding-bottom: 30px; 
+            background: #161616; 
+            /* Adjusted border-radius for full width app-screen */
+            border-top: 1px solid #333; 
+            border-top-left-radius: 0; 
+            border-top-right-radius: 0;
+            z-index: 60; 
+            display: none; 
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.8);
+            max-width: 500px; /* Match app-screen max-width */
+            margin: 0 auto; /* Center on wider screens */
+        }
+        .qty-selector { display: flex;
+            gap: 10px; 
+            margin-bottom: 15px; 
+            justify-content: center; }
+        .qty-btn { width: 40px; height: 40px;
+            border-radius: 50%; 
+            border: 1px solid #444; 
+            background: #222; 
+            color: white; 
+            cursor: pointer; 
+            font-weight: 600; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+        .qty-btn.active { background: #3e8e41; border-color: #3e8e41;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0; 
+            left: 0; 
+            right: 0;
+            background: #1e1e1e; 
+            height: 70px; 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center;
+            /* Adjusted border-radius for full width app-screen */
+            border-top-left-radius: 0; 
+            border-top-right-radius: 0;
+            z-index: 50;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+            max-width: 500px; /* Match app-screen max-width */
+            margin: 0 auto; /* Center on wider screens */
+        }
+        .nav-icon { display: flex;
+            flex-direction: column; 
+            align-items: center; 
+            color: #777; 
+            font-size: 11px; 
+            gap: 4px; 
+            cursor: pointer;
+        }
+        .nav-icon.active { color: white;
+        }
+        .nav-icon svg { fill: currentColor; width: 24px; height: 24px;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed; /* Changed to fixed for full screen overlay */
+            inset: 0; 
+            background: rgba(0,0,0,0.85); 
+            z-index: 100;
+            display: none; 
+            justify-content: center; 
+            align-items: center;
+        }
+        .modal-content { background: #2b2b2b; padding: 25px; border-radius: 20px; width: 80%; text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="app-screen">
+
+        <div id="screen_login" class="scroll-content active" style="justify-content: center; padding-bottom: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M10.5 2C8.01472 2 6 4.01472 6 6.5C6 8.62492 7.47137 10.4098 9.45696 10.8762L7.8693 17.2264C7.61658 18.2373 8.23161 19.2612 9.24249 19.5139C10.2534 19.7667 11.2773 19.1516 11.53 18.1407L13.2866 11.1143C13.8509 10.8089 14.3271 10.3692 14.6624 9.83292C15.7159 10.4915 17.1097 10.375 18.042 9.44264C19.2136 8.27107 19.2136 6.37158 
+18.042 5.20001C16.8704 4.02844 14.9709 4.02844 13.7994 5.20001C13.0846 5.91478 12.8273 6.90891 13.0136 7.80515C12.5235 6.69055 11.5945 5.83276 10.5 5.83276C10.1318 5.83276 9.83276 6.13182 9.83276 6.5C9.83276 6.86819 10.1318 7.16724 10.5 7.16724C10.8682 7.16724 11.1672 7.46629 11.1672 7.83448C11.1672 8.20267 10.8682 8.50172 10.5 8.50172C9.39473 8.50172 8.49856 7.60555 8.49856 6.5C8.49856 5.39445 9.39473 4.49828 10.5 4.49828C11.2357 4.49828 11.8812 4.90082 12.2161 5.50341C12.7189 3.47496 10.5 2 10.5 2Z"/><circle cx="16" cy="7.5" r="1.5"/></svg></div>
+                <h2>Arena Login</h2>
+            </div>
+            
+            <div class="input-label">Phone Number</div>
+            <input type="tel" id="login_phone" class="input-field" placeholder="e.g.
+9876543210">
+            
+            <div class="input-label">Password</div>
+            <input type="password" id="login_pass" class="input-field" placeholder="******">
+            
+            <button onclick="handleLogin()" class="btn-primary">Sign In</button>
+            <div class="link-text" onclick="goto('signup')">Don't have an account? Sign Up</div>
+        </div>
+
+     
+        <div id="screen_signup" class="scroll-content" style="justify-content: center; padding-bottom: 20px;">
+            <h2 style="text-align:center;
+margin-bottom:20px;">Create Account</h2>
+            
+            <div class="input-label">Full Name</div>
+            <input type="text" id="reg_name" class="input-field" placeholder="John Doe">
+
+            <div class="input-label">Phone Number</div>
+            <input type="tel" id="reg_phone" class="input-field" placeholder="9876543210">
+
+            <div class="input-label">Age</div>
+            <input 
+type="number" id="reg_age" class="input-field" placeholder="25">
+
+            <div class="input-label">Create Password</div>
+            <input type="password" id="reg_pass" class="input-field" placeholder="******">
+            
+            <button onclick="handleSignup()" class="btn-primary btn-green">Create Account</button>
+            <div class="link-text" onclick="goto('login')">Back to Sign In</div>
+        </div>
+
+        <div id="screen_dash" class="scroll-content">
+    
+            <div class="header-row">
+                <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M10.5 2C8.01472 2 6 4.01472 6 6.5C6 8.62492 7.47137 10.4098 9.45696 10.8762L7.8693 17.2264C7.61658 18.2373 8.23161 19.2612 9.24249 19.5139C10.2534 19.7667 11.2773 19.1516 11.53 18.1407L13.2866 11.1143C13.8509 10.8089 14.3271 10.3692 14.6624 9.83292C15.7159 10.4915 17.1097 10.375 18.042 9.44264C19.2136 8.27107 19.2136 6.37158 18.042 5.20001C16.8704 4.02844 14.9709 4.02844 13.7994 5.20001C13.0846 5.91478 12.8273 6.90891 13.0136 7.80515C12.5235 6.69055 11.5945 5.83276 10.5 5.83276C10.1318 5.83276 9.83276 6.13182 9.83276 6.5C9.83276 6.86819 10.1318 7.16724 10.5 7.16724C10.8682 7.16724 11.1672 7.46629 11.1672 7.83448C11.1672 
+8.20267 10.8682 8.50172 10.5 8.50172C9.39473 8.50172 8.49856 7.60555 8.49856 6.5C8.49856 5.39445 9.39473 4.49828 10.5 4.49828C11.2357 4.49828 11.8812 4.90082 12.2161 5.50341C12.7189 3.47496 10.5 2 10.5 2Z"/><circle cx="16" cy="7.5" r="1.5"/></svg></div>
+                <h2 id="txt_welcome">Welcome</h2>
+            </div>
+
+            <div class="card" style="display:flex;
+justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="color:#aaa;
+font-size:12px;">Wallet Balance</div>
+                    <div style="font-size:24px;
+font-weight:700; margin-top:4px;" id="txt_wallet">₹0</div>
+                </div>
+                <button class="btn-sm" style="background:white;
+color:black;" onclick="showRecharge()">Recharge</button>
+            </div>
+
+            <div class="card" onclick="goto('booking')" style="cursor:pointer;
+background: linear-gradient(45deg, #2b2b2b, #333);">
+                <h3 style="margin-bottom:5px;">Book a Table</h3>
+                <p style="font-size:13px;
+color:#aaa;">Find slots and reserve now</p>
+            </div>
+            
+            <div class="card" onclick="goto('mybookings')" style="cursor:pointer;">
+                <h3 style="margin-bottom:5px;">My Bookings</h3>
+                <p style="font-size:13px;
+color:#aaa;">View past and upcoming games</p>
+            </div>
+            
+            <div style="text-align:center;
+margin-top:20px;">
+                 <button class="btn-sm" style="background:transparent;
+color:#666; border:1px solid #444;" onclick="handleLogout()">Log Out</button>
+            </div>
+        </div>
+
+        <div id="screen_booking" class="scroll-content">
+            <div class="header-row">
+                <div style="font-size:24px;
+cursor:pointer; margin-right:10px; padding:10px;" onclick="goto('dash')">←</div>
+                <h2>Book Table</h2>
+            </div>
+
+            <div id="day_block_banner" class="warning-banner">
+                ⛔ This day is blocked for bookings.
+            </div>
+
+            <div class="table-select-container">
+       
+                <div style="color:#888; font-size:12px;
+margin-bottom:8px;">SELECT TABLE</div>
+                <select id="sel_table" class="styled-select" onchange="handleTableChange()">
+                    <option value="" disabled selected>Select a Table...</option>
+                </select>
+            </div>
+
+            <div style="color:#888;
+font-size:12px; margin-bottom:8px; padding-left:5px;">SELECT DATE</div>
+            <div class="calendar-strip" id="calendar_strip"></div>
+
+            <h3 style="margin: 15px 0 10px;
+font-size:16px; padding-left:5px;">Available Slots</h3>
+            <div id="slots_list">
+                <div style="text-align:center;
+color:#666; margin-top:30px;">Select a table above to start booking.</div>
+            </div>
+        </div>
+        
+        <div id="action_bar">
+            <div style="text-align:center;
+color:#aaa; font-size:13px; margin-bottom:10px;">How many seats?</div>
+            <div class="qty-selector">
+                <div class="qty-btn active" onclick="setQty(1)">1</div>
+                <div class="qty-btn" onclick="setQty(2)">2</div>
+                <div class="qty-btn" onclick="setQty(3)">3</div>
+                <div class="qty-btn" onclick="setQty(4)">4</div>
+          
+            </div>
+            
+            <div style="display:flex;
+justify-content:space-between; color:#fff; font-size:14px; margin-bottom:12px; padding:0 10px;">
+                <span>Total Price:</span>
+                <span id="lbl_total_price" style="font-weight:700;
+color:#3e8e41;">₹0</span>
+            </div>
+            <button class="btn-primary btn-green" onclick="confirmBook()">Confirm & Pay</button>
+        </div>
+
+        <div id="screen_mybookings" class="scroll-content">
+            <div class="header-row">
+                <div style="font-size:24px;
+cursor:pointer; margin-right:10px; padding:10px;" onclick="goto('dash')">←</div>
+                <h2>My Bookings</h2>
+            </div>
+            <div id="list_mybookings"></div>
+        </div>
+
+        <div id="nav_bar" class="bottom-nav" style="display:none;">
+            <div class="nav-icon active" onclick="goto('dash')" id="btn_nav_dash">
+                <svg viewBox="0 0 24 
+24"><path d="M12 2L3 9V20H21V9L12 2ZM12 4.9L19 10.5V18H5V10.5L12 4.9ZM11 12H13V18H11V12Z"/></svg><span>Home</span>
+            </div>
+            <div class="nav-icon" onclick="goto('booking')" id="btn_nav_book">
+                <svg viewBox="0 0 24 24"><path d="M19 4H18V2H16V4H8V2H6V4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4ZM19 6V8H5V6H19ZM5 20V10H19V20H5Z"/></svg><span>Booking</span>
+            </div>
+        </div>
+
+ 
+        <div id="modal_recharge" class="modal">
+            <div class="modal-content">
+                <h3>Add Money</h3>
+                <p style="color:#aaa;
+font-size:13px; margin-bottom:15px;">Enter Admin Code</p>
+                <input id="inp_code" class="input-field" placeholder="e.g.
+ABCD-1234">
+                <div style="display:flex;
+gap:10px;">
+                    <button class="btn-sm" style="flex:1;
+background:#444; color:white;" onclick="document.getElementById('modal_recharge').style.display='none'">Cancel</button>
+                    <button class="btn-sm" style="flex:1;
+background:#3e8e41; color:white;" onclick="doRecharge()">Submit</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal_generic" class="modal">
+            <div class="modal-content">
+                <h3 id="modal_generic_title" style="margin-bottom:10px;">Alert</h3>
+                <p id="modal_generic_msg" style="color:#aaa;
+font-size:14px; margin-bottom:20px;"></p>
+                <div style="display:flex; gap:10px;
+justify-content:center;">
+                    <button id="modal_generic_cancel" class="btn-sm" style="flex:1;
+background:#444; color:white; display:none;">Cancel</button>
+                    <button id="modal_generic_ok" class="btn-sm" style="flex:1;
+background:#3e8e41; color:white;">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<script>
+    // --- FIREBASE CONFIG ---
+    const cfg = {
+      apiKey: "AIzaSyC82WNipslgbxCObtoSs9a9o32LfMKQ7lo",
+      authDomain: "wrwork.firebaseapp.com",
+      databaseURL: "https://wrwork-default-rtdb.firebaseio.com",
+      projectId: "wrwork",
+      storageBucket: "wrwork.firebasestorage.app",
+      messagingSenderId: "879424926024",
+  
+      appId: "1:879424926024:web:c07d7fc5bb2aca9dca437d",
+      measurementId: "G-J0744QC9T9"
+    };
+    
+    try { firebase.initializeApp(cfg); } 
+    catch(e) { showAppAlert("Connection Error"); }
+    const db = firebase.database();
+
+    // --- APP STATE ---
+    let currentUserPhone = localStorage.getItem('arena_phone') || null;
+    let currentBalance = 0;
+    let selectedDateStr = new Date().toISOString().split('T')[0];
+    let selectedTableId = null;
+    let selectedSlotTime = null;
+    let selectedSlotPrice = 0;
+    
+    let selectedQty = 1;
+    let currentTableCapacity = 4; 
+    let maxDaysToShow = 7;
+    // Initial view
+    const TOTAL_DAYS_TO_SHOW = 30;
+    // Max days user can view
+
+    // --- IN-APP MODAL FUNCTIONS ---
+    function hideAppModal() {
+        document.getElementById('modal_generic').style.display = 'none';
+        document.getElementById('modal_generic_cancel').style.display = 'none';
+    }
+
+    function showAppAlert(message, title = 'Alert') {
+        document.getElementById('modal_generic_title').innerText = title;
+        document.getElementById('modal_generic_msg').innerText = message;
+        document.getElementById('modal_generic_ok').innerText = 'OK';
+        document.getElementById('modal_generic_ok').onclick = hideAppModal;
+        document.getElementById('modal_generic_ok').style.flex = '0 0 auto';
+        document.getElementById('modal_generic_ok').style.width = '100%';
+        document.getElementById('modal_generic').style.display = 'flex';
+    }
+
+    function showAppConfirm(message, callback, title = 'Confirm') {
+        document.getElementById('modal_generic_title').innerText = title;
+        document.getElementById('modal_generic_msg').innerText = message;
+        
+        document.getElementById('modal_generic_cancel').style.display = 'block';
+        document.getElementById('modal_generic_ok').style.width = 'auto'; // Reset width for flex
+        document.getElementById('modal_generic_ok').style.flex = '1';
+        document.getElementById('modal_generic_cancel').onclick = hideAppModal;
+        
+        document.getElementById('modal_generic_ok').innerText = 'Confirm';
+        document.getElementById('modal_generic_ok').onclick = () => {
+            hideAppModal();
+            callback();
+        };
+        document.getElementById('modal_generic').style.display = 'flex';
+    }
+
+    // --- NAVIGATION ---
+    function goto(screen) {
+        document.querySelectorAll('.scroll-content').forEach(el => el.classList.remove('active'));
+        document.getElementById('action_bar').style.display = 'none';
+        
+        document.getElementById('screen_' + screen).classList.add('active');
+        document.getElementById('nav_bar').style.display = (screen === 'login' || screen === 'signup') ? 'none' : 'flex';
+        document.getElementById('btn_nav_dash').classList.toggle('active', screen === 'dash');
+        document.getElementById('btn_nav_book').classList.toggle('active', screen === 'booking');
+
+        if(screen === 'booking') {
+            // Reset selections on entry
+            selectedTableId = null;
+            selectedSlotTime = null;
+            document.getElementById('slots_list').innerHTML = '<div style="text-align:center; color:#666; margin-top:30px;">Select a table above to start booking.</div>';
+            document.getElementById('sel_table').selectedIndex = 0;
+            // Ensure calendar state is reset to 7 days on navigation
+            maxDaysToShow = 7;
+            loadTables();
+            renderCalendar();
+        }
+        if(screen === 'mybookings') loadMyBookings();
+    }
+
+    // --- AUTH ---
+    function handleSignup() {
+        const name = document.getElementById('reg_name').value.trim();
+        const phone = document.getElementById('reg_phone').value.trim();
+        const pass = document.getElementById('reg_pass').value.trim();
+        const age = document.getElementById('reg_age').value.trim();
+        if(!name || !phone || !pass || !age) return showAppAlert("All fields required");
+        db.ref('players/' + phone).once('value').then(snap => {
+            if(snap.exists()) return showAppAlert("Phone number already registered!");
+            
+            db.ref('players/' + phone).set({
+                name: name,
+                phone: phone,
+                password: pass,
+  
+                age: age,
+                wallet: 0,
+                username: name,
+                createdAt: Date.now()
+            }).then(() => {
+                showAppAlert("Account Created! Please Login.", 
+                "Success");
+                goto('login');
+            });
+        });
+    }
+
+    function handleLogin() {
+        const phone = document.getElementById('login_phone').value.trim();
+        const pass = document.getElementById('login_pass').value.trim();
+
+        if(!phone || !pass) return showAppAlert("Enter phone and password");
+        db.ref('players/' + phone).once('value').then(snap => {
+            if(!snap.exists()) return showAppAlert("User not found. Please Sign Up.");
+            
+            const user = snap.val();
+            if(user.password !== pass) return showAppAlert("Incorrect Password");
+
+            currentUserPhone = phone;
+            localStorage.setItem('arena_phone', phone);
+      
+            startSession();
+        });
+    }
+
+    function handleLogout() {
+        currentUserPhone = null;
+        localStorage.removeItem('arena_phone');
+        goto('login');
+    }
+
+    function startSession() {
+        db.ref('players/' + currentUserPhone).on('value', snap => {
+            const d = snap.val();
+            currentBalance = (d && d.wallet) ? d.wallet : 0;
+            document.getElementById('txt_wallet').innerText = "₹" + currentBalance;
+            document.getElementById('txt_welcome').innerText = "Hi, " + (d.name || "Player");
+        });
+        goto('dash');
+    }
+
+    // --- BOOKING LOGIC ---
+    function loadTables() {
+        const sel = document.getElementById('sel_table');
+        sel.innerHTML = '<option disabled selected>Select a Table...</option>';
+        
+        db.ref('tables').once('value').then(snap => {
+            const tables = snap.val() || {};
+            Object.entries(tables).forEach(([id, t]) => {
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.text = `${t.name} (Cap: ${t.capacity || 
+                4})`;
+                opt.setAttribute('data-cap', t.capacity || 4);
+                opt.setAttribute('data-price', t.pricePerSlot || 0);
+                sel.appendChild(opt);
+            });
+        });
+    }
+
+    function handleTableChange() {
+        const sel = document.getElementById('sel_table');
+        selectedTableId = sel.value;
+        
+        // Clear UI first
+        document.getElementById('slots_list').innerHTML = '<div style="text-align:center; color:#666;">Loading Slots...</div>';
+        document.getElementById('action_bar').style.display = 'none';
+
+        const opt = sel.options[sel.selectedIndex];
+        currentTableCapacity = parseInt(opt.getAttribute('data-cap'));
+        selectedSlotPrice = parseInt(opt.getAttribute('data-price'));
+        loadSlots();
+    }
+
+    function toggleMoreDates() {
+        maxDaysToShow = (maxDaysToShow === 7) ?
+        TOTAL_DAYS_TO_SHOW : 7;
+        renderCalendar();
+    }
+    
+    function renderCalendar() {
+        const strip = document.getElementById('calendar_strip');
+        strip.innerHTML = '';
+        const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const today = new Date();
+        for(let i=0; i<maxDaysToShow; i++) {
+            const d = new Date(today);
+            d.setDate(today.getDate() + i);
+            const dateStr = d.toISOString().split('T')[0];
+            
+            const el = document.createElement('div');
+            el.className = 'cal-day';
+            if(selectedDateStr === dateStr) el.classList.add('selected');
+            el.innerHTML = `<div style="font-size:10px; color:#888; margin-bottom:4px;">${days[d.getDay()]}</div><div style="font-weight:bold; font-size:16px;">${d.getDate()}</div>`;
+            el.onclick = () => {
+                selectedDateStr = dateStr;
+                renderCalendar();
+                if(selectedTableId) loadSlots();
+            };
+            strip.appendChild(el);
+        }
+        
+        // Add 'Show more dates' element if not all days are shown
+        if (maxDaysToShow < TOTAL_DAYS_TO_SHOW) {
+            const showMore = document.createElement('div');
+            showMore.className = 'cal-day';
+            showMore.style.minWidth = '100px';
+            showMore.style.backgroundColor = '#1e1e1e';
+            showMore.style.borderColor = '#3e8e41';
+            showMore.style.color = '#3e8e41';
+            showMore.onclick = toggleMoreDates;
+            showMore.innerHTML = `<div style="font-size:12px; font-weight:600; padding:10px 0;">Show More Dates</div>`;
+            strip.appendChild(showMore);
+        }
+    }
+
+    function loadSlots() {
+        if(!selectedTableId) return;
+        const list = document.getElementById('slots_list');
+        document.getElementById('day_block_banner').style.display = 'none';
+
+        Promise.all([
+            db.ref(`tables/${selectedTableId}`).once('value'),
+            db.ref('bookings').orderByChild('date').equalTo(selectedDateStr).once('value'),
+            db.ref(`dayBlocks/${selectedDateStr}`).once('value'),       // Check Day Block
+            db.ref('maintenanceBlocks').once('value')                   // Check Maintenance
+        ]).then(([tSnap, bSnap, daySnap, maintSnap]) => {
+ 
+            
+            // 1. Check if Day is Blocked
+            if (daySnap.exists() && daySnap.val().noTT) {
+                document.getElementById('day_block_banner').style.display = 'block';
+                document.getElementById('day_block_banner').innerText = `⛔ ${daySnap.val().reason || "Day Blocked by Admin"}`;
+             
+                list.innerHTML = '<div style="text-align:center; color:#666; margin-top:30px;">Booking disabled for this date.</div>';
+                return;
+            }
+
+            const tableData = tSnap.val();
+            const allBookings = Object.values(bSnap.val() ||
+            {});
+            const slots = tableData.slots ? tableData.slots.sort() : [];
+            
+            // Filter Maintenance Blocks for this Table & Date
+            const maintBlocks = Object.values(maintSnap.val() || {}).filter(b => b.date === selectedDateStr && b.tableId === selectedTableId);
+            list.innerHTML = '';
+            
+            if(slots.length === 0) {
+                list.innerHTML = '<div style="text-align:center; margin-top:30px; color:#666;">No slots configured.</div>';
+                return;
+            }
+
+            slots.forEach(time => {
+                // 2. Check Maintenance for specific slot
+                const startTime = time.split('-')[0]; 
+                let isMaint = false;
+                maintBlocks.forEach(mb => {
+      
+                    if(startTime >= mb.from && startTime < mb.to) isMaint = true;
+                });
+
+                // 3. Calculate Capacity
+                const bookingsForSlot = allBookings.filter(b => b.tableId === selectedTableId && b.slot === time);
+               
+                const bookedSeats = bookingsForSlot.reduce((sum, b) => sum + (b.seats || 1), 0);
+                const available = currentTableCapacity - bookedSeats;
+                const isFull = available <= 0;
+
+                const el = document.createElement('div');
+                
+           
+                let className = 'slot-item';
+                let badgeHtml = '';
+                
+                if (isMaint) {
+                    className += ' maintenance';
+                
+                    badgeHtml = `<div class="status-badge maint">MAINTENANCE</div>`;
+                } else if (isFull) {
+                    className += ' full';
+                    badgeHtml = `<div class="status-badge">FULL</div>`;
+                } else {
+                    badgeHtml = `<div class="status-badge ${available < 2 ? 'low' : ''}">${available} Left</div>`;
+                }
+
+                el.className = className;
+                el.innerHTML = `
+                    <div class="slot-details">
+                        <div>${time}</div>
+                        <div>Price: ₹${tableData.pricePerSlot} / seat</div>
+                    </div>
+      
+                    ${badgeHtml}
+                `;
+                if(!isFull && !isMaint) {
+                    el.onclick = () => openQuantitySelector(time, available, el);
+                }
+                list.appendChild(el);
+            });
+        });
+    }
+
+    // --- QUANTITY & CONFIRM ---
+    let maxAvailableForSlot = 0;
+    function openQuantitySelector(time, available, elRef) {
+        document.querySelectorAll('.slot-item').forEach(e => e.classList.remove('selected'));
+        elRef.classList.add('selected');
+        
+        selectedSlotTime = time;
+        maxAvailableForSlot = available;
+        selectedQty = 1; 
+        
+        const container = document.querySelector('.qty-selector');
+        container.innerHTML = '';
+        const limit = Math.min(maxAvailableForSlot, 4);
+        for(let i=1; i<=limit; i++) {
+            const btn = document.createElement('div');
+            btn.className = `qty-btn ${i===1 ? 'active' : ''}`;
+            btn.innerText = i;
+            btn.onclick = () => setQty(i);
+            container.appendChild(btn);
+        }
+
+        updatePriceDisplay();
+        document.getElementById('action_bar').style.display = 'block';
+    }
+
+    function setQty(n) {
+        selectedQty = n;
+        document.querySelectorAll('.qty-btn').forEach(b => b.classList.remove('active'));
+        Array.from(document.querySelectorAll('.qty-btn')).find(b => b.innerText == n).classList.add('active');
+        updatePriceDisplay();
+    }
+
+    function updatePriceDisplay() {
+        const total = selectedSlotPrice * selectedQty;
+        document.getElementById('lbl_total_price').innerText = "₹" + total;
+    }
+
+    function confirmBook() {
+        if (!selectedTableId) return showAppAlert("Please select a table first!");
+        const totalPrice = selectedSlotPrice * selectedQty;
+        if(currentBalance < totalPrice) return showAppAlert("Insufficient Wallet Balance!");
+        db.ref('bookings').push({
+            date: selectedDateStr,
+            tableId: selectedTableId,
+            slot: selectedSlotTime,
+            playerUsername: currentUserPhone,
+            seats: selectedQty,
+            status: 'confirmed',
+            createdAt: Date.now()
+        }).then(() 
+        => {
+            const newBal = currentBalance - totalPrice;
+            db.ref('players/' + currentUserPhone).update({ wallet: newBal });
+            
+            db.ref('transactions').push({
+                type: 'booking',
+                username: currentUserPhone,
+       
+                amount: -totalPrice,
+                reason: `Booked ${selectedTableId} (${selectedQty} seats)`,
+                createdAt: Date.now()
+            });
+
+            showAppAlert("Booking Successful!", "Success");
+            goto('mybookings');
+        }).catch(e => showAppAlert(e.message, "Booking Error"));
+    }
+
+    // --- MY BOOKINGS (FIXED to check admin blocks and show reason) ---
+    function loadMyBookings() {
+        const list = document.getElementById('list_mybookings');
+        list.innerHTML = '<div style="text-align:center; color:#666;">Loading...</div>';
+
+        // Fetch all necessary data first: bookings, day blocks, and maintenance blocks
+        Promise.all([
+            db.ref('bookings').once('value'),
+            db.ref('dayBlocks').once('value'),
+            db.ref('maintenanceBlocks').once('value')
+        ]).then(([bSnap, dSnap, mSnap]) => {
+            const bookings = [];
+            const 
+            dayBlocks = dSnap.val() || {};
+            const maintBlocks = mSnap.val() || {};
+            
+            bSnap.forEach(c => {
+                const booking = c.val();
+                if(booking.playerUsername === currentUserPhone) {
+               
+                    let status = booking.status; // Default to stored status
+                    let cancellationReason = null;
+                    
+                    // 1. Check Day Block
+                    
+                    const dayBlock = dayBlocks[booking.date];
+                    if (dayBlock && dayBlock.noTT && status === 'confirmed') {
+                        status = 'admin_cancelled';
+                        cancellationReason = dayBlock.reason ||
+                        'Admin Day Block (Full Day)';
+                    } else {
+                        // 2. Check Maintenance Block (only if not cancelled by day block)
+                        const [startTime, endTime] = booking.slot.split('-');
+                        Object.values(maintBlocks).forEach(mb => {
+                            // Check if the block is for the same date and table
+                            if (mb.date === booking.date && mb.tableId === booking.tableId && status === 'confirmed') {
+                   
+                                // Check for time overlap: Booking start time is >= block start AND < block end
+                                if (startTime >= mb.from && startTime < mb.to) {
+                                
+                                    status = 'admin_cancelled';
+                                    cancellationReason = mb.reason || 'Maintenance Block (Slot)';
+                                }
+                    
+                            }
+                        });
+                    }
+                    
+                    if (status === 'admin_cancelled' && booking.status === 'confirmed') {
+                         // Permanently update the booking status in the DB to 'admin_cancelled' 
+                
+                        db.ref('bookings/' + c.key).update({ status: 'admin_cancelled', adminCancelledReason: cancellationReason });
+                    }
+
+                    bookings.push({ key: c.key, ...booking, status: status, cancellationReason: cancellationReason || booking.adminCancelledReason });
+                }
+            });
+            // Sort by creation time descending (newest first)
+            bookings.sort((a,b) => b.createdAt - a.createdAt);
+            list.innerHTML = '';
+            if(bookings.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:#666; margin-top:40px;">No bookings found.</div>';
+                return;
+            }
+
+            bookings.forEach(b => {
+                const item = document.createElement('div');
+                item.className = 'card';
+                
+                let actionButtonHtml = '';
+             
+                let statusBadgeHtml = '';
+                let detailsColor = '#aaa';
+                
+                if (b.status === 'admin_cancelled') {
+                    // Display cancellation status and reason
+              
+                    statusBadgeHtml = `<span style="color:#d32f2f; font-size:12px; font-weight:700; display:block; margin-bottom:10px;">CANCELLED (Admin)</span>`;
+                    actionButtonHtml = `<p style="color:#ffb74d; font-size:13px; margin:0;">Reason: ${b.cancellationReason || 'Unknown Admin Reason'}</p>`;
+                    detailsColor = '#888';
+                } else {
+                
+                    // Display confirmed status and user cancellation button (No Refund)
+                    statusBadgeHtml = `<span style="color:#3e8e41; font-size:12px; font-weight:700; display:block;
+                    margin-bottom:10px;">CONFIRMED</span>`;
+                    actionButtonHtml = `<button class="btn-sm" style="background:#d32f2f;
+                    color:white; width:100%;" onclick="requestCancelBooking('${b.key}')">Cancel Booking</button>`;
+                }
+                
+                item.innerHTML = `
+                    ${statusBadgeHtml}
+                    <div style="display:flex;
+                    justify-content:space-between; color:white; font-weight:600; margin-bottom:5px;">
+                        <span>${b.date}</span>
+                        <span>${b.slot}</span>
+                    </div>
+                    <div style="font-size:13px;
+                    color:${detailsColor}; margin-bottom:15px;">
+                        Table: ${b.tableId} • Seats: ${b.seats || 1}
+                    </div>
+                    ${actionButtonHtml}
+                `;
+             
+                list.appendChild(item);
+            });
+        }).catch(e => {
+            list.innerHTML = `<div style="text-align:center; color:#d32f2f; margin-top:40px;">Error loading bookings: ${e.message}</div>`;
+        });
+    }
+
+    window.requestCancelBooking = (key) => {
+        showAppConfirm("Cancel booking? (No Refund)", () => {
+            db.ref('bookings/' + key).remove().then(() => {
+     
+                showAppAlert("Cancelled (No Refund)", "Cancellation");
+                loadMyBookings();
+            });
+        }, "Cancel Booking");
+    };
+
+    // --- RECHARGE ---
+    window.showRecharge = () => {
+        document.getElementById('modal_recharge').style.display = 'flex';
+        document.getElementById('inp_code').value = '';
+    }
+    window.doRecharge 
+    = () => {
+        const code = document.getElementById('inp_code').value.trim().toUpperCase();
+        if(!code) return;
+        db.ref('rechargeCodes/' + code).once('value').then(snap => {
+            if(!snap.exists() || snap.val().isUsed) return showAppAlert("Invalid or Used Code");
+            const val = snap.val().value;
+            
+            db.ref('rechargeCodes/' + code).update({ isUsed: true, usedBy: currentUserPhone, usedAt: Date.now() });
+            db.ref('players/' + currentUserPhone).update({ wallet: currentBalance + val });
+          
+            
+            db.ref('transactions').push({
+                type: 'recharge',
+                username: currentUserPhone,
+                amount: val,
+                code: code,
+                createdAt: Date.now()
+ 
+            });
+
+            showAppAlert(`Added ₹${val} to wallet!`, "Recharge Success");
+            document.getElementById('modal_recharge').style.display = 'none';
+        });
+    }
+
+    if(currentUserPhone) startSession();
+    else goto('login');
+
+</script>
+</body>
+</html>

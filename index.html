@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-  <title>Arena Player App — Glass UI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Table Tennis Booking — Glass UI</title>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -11,72 +11,65 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
   <style>
-    /* -------------------------
-       Premium Liquid Glass UI
-       Option 3: Dark Neon Glass
-       ------------------------- */
     :root{
-      --bg-1: #07070b;            /* page background base */
-      --bg-2: rgba(15,18,25,0.6); /* blurred overlay */
+      --bg-1: #07070b;
+      --bg-2: rgba(15,18,25,0.6);
       --card: rgba(255,255,255,0.04);
       --glass-border: rgba(255,255,255,0.06);
       --muted: #9aa3a8;
-      --accent: #3ee07a;         /* neon green accent (keeps your green) */
-      --accent-2: #2ce3ff;       /* cyan highlight */
+      --accent: #3ee07a;
+      --accent-2: #2ce3ff;
       --glass-blur: 14px;
       --radius: 16px;
       --glass-shadow: 0 10px 30px rgba(2,6,23,0.6);
       --glass-glow: 0 6px 30px rgba(62,224,122,0.08);
-      --max-width: 520px;
-      --safe-pad: 18px;
+      --max-width: 680px;
+      --safe-pad: 16px;
       font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
 
-    /* Page */
     html,body{
       height:100%;
       margin:0;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
       background:
         radial-gradient(1200px 600px at 10% 10%, rgba(46, 105, 255, 0.06), transparent 10%),
         radial-gradient(900px 500px at 80% 80%, rgba(46, 255, 180, 0.03), transparent 15%),
         linear-gradient(180deg,var(--bg-1), #05050a);
       color: #eaf2ee;
-      -webkit-user-select:none;
-      user-select:none;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      box-sizing:border-box;
     }
+    *,*::before,*::after{box-sizing:inherit}
 
-    /* App container */
     .app-wrap{
       min-height:100vh;
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:40px 18px;
+      padding:20px var(--safe-pad);
       box-sizing:border-box;
     }
 
     .app-screen{
       width:100%;
       max-width:var(--max-width);
-      height:calc(100vh - 80px);
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-radius:24px;
-      overflow:hidden;
+      border-radius:20px;
+      overflow:visible;
       position:relative;
       box-shadow: var(--glass-shadow);
       backdrop-filter: blur(8px) saturate(120%);
       border: 1px solid rgba(255,255,255,0.03);
       display:flex;
       flex-direction:column;
+      max-height:calc(100vh - 40px);
     }
 
-    /* soft colorful behind-light */
     .app-screen::before{
       content:"";
       position:absolute;
-      inset: -30% -10% auto auto;
+      inset: -20% -10% auto auto;
       width: 60%;
       height: 60%;
       background: linear-gradient(120deg, rgba(46,105,255,0.06), rgba(62,224,122,0.06));
@@ -85,56 +78,33 @@
       z-index:0;
     }
 
-    /* top header area */
     .topbar{
       display:flex;
       align-items:center;
       gap:12px;
-      padding:18px var(--safe-pad);
+      padding:14px var(--safe-pad);
       z-index:2;
       position:relative;
+      min-height:62px;
     }
-    .logo{
-      width:52px;
-      height:52px;
-      min-width:52px;
-      border-radius:14px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-      border: 1px solid rgba(255,255,255,0.05);
-      box-shadow: 0 6px 18px rgba(0,0,0,0.5), var(--glass-glow);
-      transform: translateZ(0);
-      backdrop-filter: blur(var(--glass-blur));
-    }
+    .logo{ width:48px; height:48px; min-width:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.05); box-shadow:0 6px 18px rgba(0,0,0,0.5), var(--glass-glow); backdrop-filter: blur(var(--glass-blur)); flex-shrink:0 }
     .logo svg{ width:26px;height:26px; transform: rotate(-10deg); fill: var(--accent); }
 
-    .title{
-      display:flex;
-      flex-direction:column;
-      line-height:1;
-    }
-    .title h1{
-      margin:0;
-      font-size:18px;
-      font-weight:700;
-      color:#eefaf0;
-      letter-spacing:0.1px;
-    }
-    .title p{
-      margin:0;
-      color:var(--muted);
-      font-size:12px;
-      margin-top:2px;
-    }
+    .title{ display:flex; flex-direction:column; line-height:1; min-width:0 }
+    .title h1{ margin:0; font-size:18px; font-weight:700; color:#eefaf0 }
+    .title p{ margin:0; color:var(--muted); font-size:12px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 
-    /* main scroll area */
+    /* ensure flex children can shrink to avoid overflow on small phones */
+    .topbar > * { min-width:0 }
+
+    .header-actions{ display:flex; align-items:center; gap:10px; flex-shrink:0 }
+    .wallet-card{ padding:8px 12px; min-width:110px; display:flex; align-items:center; gap:10px; border-radius:12px }
+
     .scroll-content{
-      padding:20px var(--safe-pad);
+      padding:18px var(--safe-pad);
       overflow:auto;
       flex:1;
-      display:none; /* toggled by .active */
+      display:none;
       gap:14px;
       z-index:2;
     }
@@ -143,248 +113,89 @@
     .scroll-content::-webkit-scrollbar{ height:8px; width:8px; }
     .scroll-content::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.04); border-radius:20px; }
 
-    /* glass card */
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
       border: 1px solid var(--glass-border);
       border-radius: var(--radius);
-      padding:16px;
+      padding:14px;
       box-shadow: var(--glass-shadow);
       backdrop-filter: blur(var(--glass-blur));
-      transition: transform .28s cubic-bezier(.2,.9,.3,1), box-shadow .28s;
+      transition: transform .28s cubic-bezier(.2,.9,.3,1), box-shadow .28s, opacity .28s;
       position:relative;
       overflow:hidden;
+      opacity:0;
+      transform:translateY(6px);
+      animation:cardIn .32s ease forwards;
     }
     .card:hover{ transform: translateY(-6px); box-shadow: 0 18px 40px rgba(2,6,23,0.7); }
 
-    /* forms */
+    @keyframes cardIn{ from{ opacity:0; transform:translateY(8px)} to{ opacity:1; transform:none } }
+
+    /* subtle pop for slot items with stagger via --i */
+    .slot-item{ animation:popIn .36s cubic-bezier(.2,.9,.3,1) forwards; opacity:0; transform:translateY(8px); }
+    @keyframes popIn{ to{ opacity:1; transform:none } }
+
     .input-label{ font-size:12px; color:var(--muted); margin:8px 4px 6px; display:block; }
-    .input-field{
-      width:100%;
-      padding:14px 14px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,0.04);
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      color: #e9f7ee;
-      outline:none;
-      font-size:15px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.015);
-      transition: box-shadow .18s, transform .18s;
-      backdrop-filter: blur(6px);
-    }
+    .input-field{ width:100%; padding:12px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.04); background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); color: #e9f7ee; outline:none; font-size:15px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.015); transition: box-shadow .18s, transform .18s; backdrop-filter: blur(6px); }
     .input-field::placeholder{ color: rgba(230,240,235,0.25); }
     .input-field:focus{ box-shadow: 0 6px 24px rgba(62,224,122,0.06); transform: translateY(-1px); border-color: rgba(62,224,122,0.18); }
 
-    /* buttons */
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      border-radius:999px;
-      padding:12px 16px;
-      font-weight:700;
-      font-size:15px;
-      border:none;
-      cursor:pointer;
-      transition: transform .18s, box-shadow .18s;
-      color: #07110a;
-      background: linear-gradient(90deg,var(--accent), #30d076);
-      box-shadow: 0 8px 30px rgba(62,224,122,0.12), 0 2px 6px rgba(0,0,0,0.6);
-    }
+    .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; border-radius:999px; padding:12px 16px; font-weight:700; font-size:15px; border:none; cursor:pointer; transition: transform .18s, box-shadow .18s; color: #07110a; background: linear-gradient(90deg,var(--accent), #30d076); box-shadow: 0 8px 30px rgba(62,224,122,0.12), 0 2px 6px rgba(0,0,0,0.6); }
     .btn:active{ transform: translateY(1px); }
-    .btn-ghost{
-      background:transparent;
-      color:var(--muted);
-      border:1px solid rgba(255,255,255,0.04);
-      padding:10px 12px;
-      border-radius:12px;
-    }
-    .btn-sm{
-      padding:8px 12px;
-      border-radius:12px;
-      font-size:13px;
-      font-weight:600;
-    }
+    .btn-ghost{ background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.04); padding:10px 12px; border-radius:12px; }
+    .btn-sm{ padding:8px 12px; border-radius:12px; font-size:13px; font-weight:600; }
 
-    /* login/signup layout center */
-    .center-panel{
-      width:100%;
-      max-width:420px;
-      margin:0 auto;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      align-items:stretch;
-    }
+    .center-panel{ width:100%; max-width:520px; margin:0 auto; display:flex; flex-direction:column; gap:12px; align-items:stretch; }
+    .link-text{ color:var(--accent); text-decoration:underline; text-align:center; font-size:13px; cursor:pointer; }
 
-    .link-text{
-      color:var(--accent);
-      text-decoration:underline;
-      text-align:center;
-      font-size:13px;
-      cursor:pointer;
-    }
-
-    /* wallet card specific */
-    .wallet-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; }
-    .wallet-value{ font-size:24px; font-weight:800; color:#f6fff7; }
-
-    /* booking area */
-    .calendar-strip{
-      display:flex;
-      gap:10px;
-      overflow:auto;
-      padding:6px 2px 12px 2px;
-      min-height:72px;
-    }
-    .cal-day{
-      min-width:64px;
-      border-radius:12px;
-      padding:10px 8px;
-      text-align:center;
-      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
-      border: 1px solid rgba(255,255,255,0.03);
-      cursor:pointer;
-      transition: transform .14s, box-shadow .14s;
-      flex-shrink:0;
-    }
+    .calendar-strip{ display:flex; gap:10px; overflow:auto; padding:6px 2px 12px 2px; min-height:72px; }
+    .cal-day{ min-width:64px; border-radius:12px; padding:10px 8px; text-align:center; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)); border: 1px solid rgba(255,255,255,0.03); cursor:pointer; transition: transform .14s, box-shadow .14s; flex-shrink:0 }
     .cal-day:hover{ transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0,0,0,0.6); }
     .cal-day.selected{ background: linear-gradient(180deg, rgba(62,224,122,0.08), rgba(46, 105, 255,0.02)); border-color: rgba(62,224,122,0.18); color:#eafdf2; }
+    .cal-day .month{ display:block; font-size:11px; color:var(--muted); margin-top:6px; }
 
-    /* slots */
-    .slot-item{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      padding:14px;
-      border-radius:12px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
-      border:1px solid rgba(255,255,255,0.03);
-      cursor:pointer;
-      transition: transform .12s, box-shadow .12s;
-    }
+    .slot-item{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px; border-radius:12px; background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.03); cursor:pointer; transition: transform .12s, box-shadow .12s; }
     .slot-item:hover{ transform: translateY(-6px); box-shadow: 0 18px 40px rgba(0,0,0,0.5); }
     .slot-item.selected{ border-color: rgba(62,224,122,0.18); box-shadow: 0 16px 40px rgba(62,224,122,0.05); }
     .slot-item.full{ opacity:0.5; filter:grayscale(0.6); pointer-events:none; }
-    .slot-item.maintenance{ border-color: rgba(255,80,80,0.12); background: linear-gradient(180deg, rgba(255,80,80,0.02), rgba(255,80,80,0.01)); }
 
-    .slot-details div:first-child{ font-weight:700; color:#eafdf2; }
-    .slot-details div:last-child{ color:var(--muted); font-size:13px; margin-top:6px; }
-
-    .status-badge{
-      padding:6px 10px;
-      border-radius:10px;
-      font-size:12px;
-      font-weight:700;
-      color:#fff;
-      background: rgba(0,0,0,0.35);
-      border:1px solid rgba(255,255,255,0.04);
-    }
+    .status-badge{ padding:6px 10px; border-radius:10px; font-size:12px; font-weight:700; color:#fff; background: rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.04); }
     .status-badge.low{ color: #ffdf6b; background: linear-gradient(90deg,#ff9b6b,#ffdf6b); }
     .status-badge.maint{ background: linear-gradient(90deg,#ff5c5c,#ff9b6b); }
 
-    /* warning banner */
-    .warning-banner{
-      background: linear-gradient(90deg, rgba(255,80,80,0.12), rgba(255,80,80,0.06));
-      border: 1px solid rgba(255,80,80,0.12);
-      color: #ffdede;
-      padding:12px;
-      border-radius:12px;
-      text-align:center;
-      display:none;
-    }
+    .warning-banner{ background: linear-gradient(90deg, rgba(255,80,80,0.12), rgba(255,80,80,0.06)); border: 1px solid rgba(255,80,80,0.12); color: #ffdede; padding:12px; border-radius:12px; text-align:center; display:none; }
 
-    /* bottom action bar (floating) */
-    #action_bar{
-      position:fixed;
-      left:50%;
-      transform: translateX(-50%);
-      bottom:24px;
-      width: calc(100% - 48px);
-      max-width:480px;
-      z-index:40;
-      border-radius:16px;
-      padding:14px;
-      display:none;
-      background: linear-gradient(180deg, rgba(10,12,15,0.9), rgba(8,9,11,0.85));
-      border:1px solid rgba(255,255,255,0.04);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-      backdrop-filter: blur(8px);
-    }
+    #action_bar{ position:fixed; left:50%; transform: translateX(-50%); bottom:18px; width: calc(100% - 36px); max-width:560px; z-index:40; border-radius:16px; padding:12px; display:none; background: linear-gradient(180deg, rgba(10,12,15,0.9), rgba(8,9,11,0.85)); border:1px solid rgba(255,255,255,0.04); box-shadow: 0 20px 50px rgba(0,0,0,0.6); backdrop-filter: blur(8px); }
 
     .qty-selector{ display:flex; gap:10px; justify-content:center; padding:8px 6px; flex-wrap:wrap; }
-    .qty-btn{
-      border-radius:999px;
-      padding:10px 12px;
-      min-width:44px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:800;
-      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
-      border:1px solid rgba(255,255,255,0.03);
-      cursor:pointer;
-      color:#dbeee0;
-    }
+    .qty-btn{ border-radius:999px; padding:10px 12px; min-width:44px; display:flex; align-items:center; justify-content:center; font-weight:800; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)); border:1px solid rgba(255,255,255,0.03); cursor:pointer; color:#dbeee0; }
     .qty-btn.active{ background: linear-gradient(90deg,var(--accent), #2fd26f); color:#03100b; box-shadow: 0 10px 30px rgba(62,224,122,0.08); }
 
-    /* bottom nav */
-    .bottom-nav{
-      position:sticky;
-      bottom:0;
-      width:100%;
-      display:flex;
-      gap:18px;
-      justify-content:space-around;
-      padding:12px var(--safe-pad);
-      margin-top:auto;
-      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
-      border-top: 1px solid rgba(255,255,255,0.02);
-      backdrop-filter: blur(6px);
-    }
+    .bottom-nav{ position:sticky; bottom:0; width:100%; display:flex; gap:18px; justify-content:space-around; padding:12px var(--safe-pad); margin-top:auto; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)); border-top: 1px solid rgba(255,255,255,0.02); backdrop-filter: blur(6px); }
     .nav-icon{ display:flex; flex-direction:column; align-items:center; gap:6px; color:rgba(255,255,255,0.5); cursor:pointer; font-size:12px; }
     .nav-icon.active{ color:var(--accent); filter:drop-shadow(0 6px 30px rgba(62,224,122,0.06)); }
     .nav-icon svg{ width:22px;height:22px; fill:currentColor; }
 
-    /* modal */
-    .modal{
-      position:fixed;
-      inset:0;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      background: linear-gradient(180deg, rgba(4,6,8,0.6), rgba(4,6,8,0.75));
-      z-index:100;
-      padding:20px;
-    }
-    .modal-content{
-      width:100%;
-      max-width:480px;
-      border-radius:14px;
-      padding:18px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border: 1px solid rgba(255,255,255,0.04);
-      box-shadow: 0 30px 80px rgba(2,6,23,0.7);
-      backdrop-filter: blur(12px);
-      color:#eafcf0;
-    }
-    .modal h3{ margin:0 0 6px 0; font-size:18px; }
-    .modal p{ margin:0 0 16px 0; color:var(--muted); font-size:14px; }
+    .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background: linear-gradient(180deg, rgba(4,6,8,0.6), rgba(4,6,8,0.75)); z-index:100; padding:20px; }
+    .modal-content{ width:100%; max-width:480px; border-radius:14px; padding:18px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.04); box-shadow: 0 30px 80px rgba(2,6,23,0.7); backdrop-filter: blur(12px); color:#eafcf0; }
 
-    /* small helpers */
     .muted{ color:var(--muted); }
     .center{ text-align:center; }
     .small{ font-size:13px; color:var(--muted); }
 
-    /* responsive */
-    @media (max-width:420px){
-      .app-screen{ height:100vh; border-radius:18px; padding-bottom:80px; }
-      .topbar{ padding:12px; }
+    /* My Bookings scroll fix (Option A) */
+    #list_mybookings{ min-height:120px; padding:12px; max-height:calc(54vh); overflow:auto; }
+
+    /* Responsive tweaks */
+    @media (max-width:520px){
+      :root{ --safe-pad:12px; }
+      .app-screen{ border-radius:14px; }
+      .topbar{ padding:10px var(--safe-pad); }
+      .logo{ width:44px; height:44px; min-width:44px }
       #action_bar{ left:12px; transform:none; width: calc(100% - 24px); }
-      .logo{ width:44px; min-width:44px; height:44px; }
+      .center-panel{ max-width:100%; }
     }
+
   </style>
 </head>
 <body>
@@ -398,18 +209,18 @@
         </div>
 
         <div class="title">
-          <h1 id="txt_welcome">Arena Login</h1>
+          <h1 id="txt_welcome">Table Tennis Booking</h1>
           <p class="small">Book tables, manage wallet & view bookings</p>
         </div>
 
         <div style="flex:1"></div>
 
-        <div id="header_wallet_display" style="display:flex; align-items:center; gap:10px;">
-          <div class="card" style="padding:8px 12px; min-width:120px; display:flex; align-items:center; gap:10px;">
+        <div class="header-actions" id="header_wallet_display">
+          <div class="card wallet-card" style="padding:8px 12px; min-width:120px; display:flex; align-items:center; gap:10px;">
             <div style="width:10px;height:36px;border-radius:6px;background:linear-gradient(180deg,var(--accent), #2fd26f)"></div>
             <div style="line-height:1;">
               <div class="small muted">Wallet</div>
-              <div id="txt_wallet" class="wallet-value">₹0</div>
+              <div id="txt_wallet" class="wallet-value" style="font-weight:800;font-size:18px">₹0</div>
             </div>
           </div>
         </div>
@@ -420,7 +231,7 @@
 
           <div style="text-align:center;margin-bottom:6px;">
             <h2 style="margin:6px 0 0 0;">Welcome back</h2>
-            <div class="small muted" style="margin-top:6px;">Sign in to continue to Arena</div>
+            <div class="small muted" style="margin-top:6px;">Sign in to continue to Table Tennis Booking</div>
           </div>
 
           <div>
@@ -444,7 +255,7 @@
 
           <div style="text-align:center;margin-bottom:6px;">
             <h2 style="margin:6px 0 0 0;">Create Account</h2>
-            <div class="small muted" style="margin-top:6px;">Quick sign up — join Arena</div>
+            <div class="small muted" style="margin-top:6px;">Quick sign up — join Table Tennis Booking</div>
           </div>
 
           <label class="input-label">Full Name</label>
@@ -470,7 +281,7 @@
             <div class="small muted">Welcome</div>
             <div style="font-weight:800;font-size:20px;" id="txt_welcome_small">Player</div>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
             <button class="btn-ghost btn-sm" onclick="goto('booking')">Book Table</button>
             <button class="btn-ghost btn-sm" onclick="goto('mybookings')">My Bookings</button>
             <button class="btn-sm" style="background:linear-gradient(90deg,var(--accent), #2fd26f); color:#03100b;" onclick="showRecharge()">Recharge</button>
@@ -557,7 +368,7 @@
           <h2 style="margin:0;">My Bookings</h2>
         </div>
 
-        <div id="list_mybookings" class="card" style="min-height:120px; padding:12px;">
+        <div id="list_mybookings" class="card">
           <div class="center small muted">Loading...</div>
         </div>
       </div>
@@ -600,8 +411,6 @@
   </div>
 
   <script>
-    // --- FIREBASE CONFIGURATION & INITIALIZATION ---
-    // NOTE: kept your config just like original file
     const cfg = {
       apiKey: "AIzaSyC82WNipslgbxCObtoSs9a9o32LfMKQ7lo",
       authDomain: "wrwork.firebaseapp.com",
@@ -622,7 +431,6 @@
         window.onload = () => showAppAlert("Connection Error: Check your Firebase configuration.");
     }
 
-    // --- APP STATE ---
     let currentUserPhone = localStorage.getItem('arena_phone') || null;
     let currentBalance = 0;
     let selectedDateStr = new Date().toISOString().split('T')[0];
@@ -635,7 +443,6 @@
     let maxDaysToShow = 7;
     const TOTAL_DAYS_TO_SHOW = 30;
 
-    // --- IN-APP MODAL FUNCTIONS ---
     function hideAppModal() {
         document.getElementById('modal_generic').style.display = 'none';
         document.getElementById('modal_generic_cancel').style.display = 'none';
@@ -668,7 +475,6 @@
         document.getElementById('modal_generic').style.display = 'flex';
     }
 
-    // --- NAVIGATION ---
     function goto(screen) {
         document.querySelectorAll('.scroll-content').forEach(el => el.classList.remove('active'));
         document.getElementById('action_bar').style.display = 'none';
@@ -677,15 +483,13 @@
         if (!s) return console.warn('Screen not found', screen);
         s.classList.add('active');
 
-        // FIX: Control the visibility of the wallet in the topbar
         const walletDisplay = document.getElementById('header_wallet_display');
         if (screen === 'login' || screen === 'signup') {
             if (walletDisplay) walletDisplay.style.display = 'none';
-            document.getElementById('txt_welcome').innerText = 'Arena Login';
+            document.getElementById('txt_welcome').innerText = 'Table Tennis Booking';
         } else {
             if (walletDisplay) walletDisplay.style.display = 'flex';
         }
-
 
         document.getElementById('nav_bar').style.display = (screen === 'login' || screen === 'signup') ? 'none' : 'flex';
         document.getElementById('btn_nav_dash').classList.toggle('active', screen === 'dash');
@@ -704,7 +508,6 @@
         if (screen === 'mybookings') loadMyBookings();
     }
 
-    // --- AUTH FUNCTIONS ---
     function handleSignup() {
         if (!db) return showAppAlert("Database connection failed.");
         const name = document.getElementById('reg_name').value.trim();
@@ -767,7 +570,6 @@
 
     function startSession() {
         if(!db) return;
-        // This listener is critical for live balance updates
         db.ref('players/' + currentUserPhone).on('value', snap => {
             const d = snap.val();
             currentBalance = (d && d.wallet) ? d.wallet : 0;
@@ -780,7 +582,6 @@
         goto('dash');
     }
 
-    // --- BOOKING LOGIC ---
     function loadTables() {
         if (!db) return;
         const sel = document.getElementById('sel_table');
@@ -821,15 +622,17 @@
         const strip = document.getElementById('calendar_strip');
         strip.innerHTML = '';
         const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         const today = new Date();
         for(let i=0;i<maxDaysToShow;i++){
             const d = new Date(today);
             d.setDate(today.getDate() + i);
             const dateStr = d.toISOString().split('T')[0];
+            const monthShort = months[d.getMonth()];
             const el = document.createElement('div');
             el.className = 'cal-day';
             if(selectedDateStr === dateStr) el.classList.add('selected');
-            el.innerHTML = `<div style="font-size:10px;color:var(--muted);margin-bottom:6px;">${days[d.getDay()]}</div><div style="font-weight:800;font-size:16px;">${d.getDate()}</div>`;
+            el.innerHTML = `<div style="font-size:10px;color:var(--muted);margin-bottom:6px;">${days[d.getDay()]}</div><div style="font-weight:800;font-size:16px;">${d.getDate()}</div><div class=\"month\">${monthShort}</div>`;
             el.onclick = () => {
                 selectedDateStr = dateStr;
                 renderCalendar();
@@ -883,7 +686,7 @@
                 return;
             }
 
-            slots.forEach(time => {
+            slots.forEach((time, idx) => {
                 const startTime = time.split('-')[0];
                 let isMaint = false;
                 maintBlocks.forEach(mb => { if(startTime >= mb.from && startTime < mb.to) isMaint = true; });
@@ -895,6 +698,8 @@
 
                 const el = document.createElement('div');
                 el.className = 'slot-item';
+                el.style.animationDelay = (idx * 0.03) + 's';
+
                 let badgeHtml = '';
 
                 if(isMaint){
@@ -925,7 +730,6 @@
         });
     }
 
-    // --- QUANTITY & CONFIRM ---
     let maxAvailableForSlot = 0;
     function openQuantitySelector(time, available, elRef) {
         document.querySelectorAll('.slot-item').forEach(e => e.classList.remove('selected'));
@@ -994,11 +798,10 @@
         }).catch(e => showAppAlert(e.message, "Booking Error"));
     }
 
-    // --- MY BOOKINGS ---
     function loadMyBookings() {
         if (!db) return;
         const list = document.getElementById('list_mybookings');
-        list.innerHTML = '<div style="text-align:center; color:#9aa3a8;">Loading...</div>';
+        list.innerHTML = '<div class="center small muted">Loading...</div>';
 
         Promise.all([
             db.ref('bookings').once('value'),
@@ -1091,10 +894,7 @@
         }, "Cancel Booking");
     };
 
-    // --- RECHARGE ---
-    window.showRecharge = () => {
-        document.getElementById('modal_recharge').style.display = 'flex';
-    }
+    window.showRecharge = () => { document.getElementById('modal_recharge').style.display = 'flex'; }
     window.doRecharge = () => {
         if (!db) return showAppAlert("Database connection failed.");
         const code = document.getElementById('inp_code').value.trim().toUpperCase();
@@ -1119,7 +919,6 @@
         });
     }
 
-    // initial boot
     if(currentUserPhone) startSession();
     else goto('login');
 

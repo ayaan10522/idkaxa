@@ -93,6 +93,7 @@
       padding:18px var(--safe-pad);
       z-index:2;
       position:relative;
+      flex-wrap: wrap; /* ADDED: Allow elements to wrap on smaller screens */
     }
     .logo{
       width:52px;
@@ -379,6 +380,41 @@
     .small{ font-size:13px; color:var(--muted); }
 
     /* responsive */
+    @media (max-width:520px){
+        /* Dashboard welcome card buttons: allow them to wrap */
+        #screen_dash .card:first-child > div:last-child {
+            display: flex;
+            flex-wrap: wrap; /* Allow buttons to wrap to next line */
+            justify-content: flex-end; /* Keep buttons to the right */
+            gap: 6px; /* Reduced gap for small screens */
+            margin-top: 10px; /* Add some space if it wraps */
+            width: 100%; /* Ensure it uses full width for wrapping */
+        }
+        
+        /* Ensure each button gets enough space */
+        #screen_dash .card:first-child button {
+            flex-grow: 1; /* Allow buttons to grow and fill space */
+            min-width: 100px; /* Ensure a minimum width */
+        }
+        
+        /* Topbar layout adjustments for small screens */
+        .topbar {
+            align-items: flex-start; /* Align to the top when wrapping */
+        }
+        .logo {
+            order: 1;
+        }
+        #header_wallet_display {
+            order: 2;
+            margin-left: auto; /* Push to the right */
+        }
+        .title {
+            order: 3; 
+            margin-top: 10px; /* Space between wallet/logo and title */
+            flex-basis: 100%; /* Take full width on the next line */
+        }
+    }
+
     @media (max-width:420px){
       .app-screen{ height:100vh; border-radius:18px; padding-bottom:80px; }
       .topbar{ padding:12px; }
@@ -465,12 +501,12 @@
       </div>
 
       <div id="screen_dash" class="scroll-content">
-        <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:12px; flex-wrap: wrap;">
           <div>
             <div class="small muted">Welcome</div>
             <div style="font-weight:800;font-size:20px;" id="txt_welcome_small">Player</div>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap: wrap;">
             <button class="btn-ghost btn-sm" onclick="goto('booking')">Book Table</button>
             <button class="btn-ghost btn-sm" onclick="goto('mybookings')">My Bookings</button>
             <button class="btn-sm" style="background:linear-gradient(90deg,var(--accent), #2fd26f); color:#03100b;" onclick="showRecharge()">Recharge</button>
@@ -557,7 +593,7 @@
           <h2 style="margin:0;">My Bookings</h2>
         </div>
 
-        <div id="list_mybookings" class="card" style="min-height:120px; padding:12px;">
+        <div id="list_mybookings" class="card" style="min-height:120px; padding:12px; display:flex; flex-direction:column; gap:12px;">
           <div class="center small muted">Loading...</div>
         </div>
       </div>
@@ -1046,9 +1082,16 @@
                 return;
             }
 
+            // Ensure list_mybookings has the correct flex properties for card stacking
+            list.style.display = 'flex';
+            list.style.flexDirection = 'column';
+            list.style.gap = '12px';
+
+
             bookings.forEach(b => {
                 const item = document.createElement('div');
                 item.className = 'card';
+                item.style.padding = '16px'; // Restore standard card padding for inner items
                 let actionButtonHtml = '';
                 let statusBadgeHtml = '';
                 let detailsColor = '#aaa';

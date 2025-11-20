@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
   <title>Arena Player App — Glass UI</title>
 
-  <!-- Firebase (same as your file) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- Fonts & icons -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -382,10 +380,28 @@
 
     /* responsive */
     @media (max-width:420px){
-      .app-screen{ height:100vh; border-radius:18px; padding-bottom:80px; }
-      .topbar{ padding:12px; }
-      #action_bar{ left:12px; transform:none; width: calc(100% - 24px); }
+      .app-screen{ height:auto; min-height:100vh; border-radius:18px; padding-bottom:68px; }
+      .topbar{ padding:12px; flex-wrap:wrap; }
+      #header_wallet_display{ width:100%; margin-top:8px; }
+      #action_bar{ left:12px; transform:none; width: calc(100% - 24px); bottom:12px; }
       .logo{ width:44px; min-width:44px; height:44px; }
+      .btn{ width:100%; }
+    }
+
+    @media (max-width:480px){
+      :root{ --safe-pad:12px; --radius:14px; }
+      .app-wrap{ padding:20px 12px; }
+      .center-panel{ max-width:100%; padding:0 4px; }
+      .card{ border-radius:var(--radius); padding:12px; }
+      .input-field{ font-size:16px; padding:14px 14px; }
+      .wallet-value{ font-size:20px; }
+      .slot-item{ padding:12px; border-radius:12px; }
+    }
+
+    @media (max-width:360px){
+      .logo{ width:40px; min-width:40px; height:40px; }
+      .title h1{ font-size:16px; }
+      .cal-day{ min-width:56px; }
     }
   </style>
 </head>
@@ -394,10 +410,8 @@
   <div class="app-wrap">
     <div class="app-screen" aria-live="polite">
 
-      <!-- Topbar -->
       <div class="topbar">
         <div class="logo" aria-hidden="true">
-          <!-- subtle neon logo -->
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M10.5 2C8.01472 2 6 4.01472 6 6.5C6 8.62492 7.47137 10.4098 9.45696 10.8762L7.8693 17.2264C7.61658 18.2373 8.23161 19.2612 9.24249 19.5139C10.2534 19.7667 11.2773 19.1516 11.53 18.1407L13.2866 11.1143C13.8509 10.8089 14.3271 10.3692 14.6624 9.83292C15.7159 10.4915 17.1097 10.375 18.042 9.44264C19.2136 8.27107 19.2136 6.37158 18.042 5.20001C16.8704 4.02844 14.9709 4.02844 13.7994 5.20001C13.0846 5.91478 12.8273 6.90891 13.0136 7.80515C12.5235 6.69055 11.5945 5.83276 10.5 5.83276C10.1318 5.83276 9.83276 6.13182 9.83276 6.5C9.83276 6.86819 10.1318 7.16724 10.5 7.16724C10.8682 7.16724 11.1672 7.46629 11.1672 7.83448C11.1672 8.20267 10.8682 8.50172 10.5 8.50172C9.39473 8.50172 8.49856 7.60555 8.49856 6.5C8.49856 5.39445 9.39473 4.49828 10.5 4.49828C11.2357 4.49828 11.8812 4.90082 12.2161 5.50341C12.7189 3.47496 10.5 2 10.5 2Z" fill="currentColor"/><circle cx="16" cy="7.5" r="1.5" fill="currentColor"/></svg>
         </div>
 
@@ -408,8 +422,7 @@
 
         <div style="flex:1"></div>
 
-        <!-- wallet short -->
-        <div style="display:flex; align-items:center; gap:10px;">
+        <div id="header_wallet_display" style="display:flex; align-items:center; gap:10px;">
           <div class="card" style="padding:8px 12px; min-width:120px; display:flex; align-items:center; gap:10px;">
             <div style="width:10px;height:36px;border-radius:6px;background:linear-gradient(180deg,var(--accent), #2fd26f)"></div>
             <div style="line-height:1;">
@@ -420,7 +433,6 @@
         </div>
       </div>
 
-      <!-- LOGIN SCREEN -->
       <div id="screen_login" class="scroll-content active" style="justify-content:center; align-items:center;">
         <div class="center-panel">
 
@@ -445,7 +457,6 @@
         </div>
       </div>
 
-      <!-- SIGNUP SCREEN -->
       <div id="screen_signup" class="scroll-content" style="justify-content:center; align-items:center;">
         <div class="center-panel">
 
@@ -471,7 +482,6 @@
         </div>
       </div>
 
-      <!-- DASHBOARD -->
       <div id="screen_dash" class="scroll-content">
         <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div>
@@ -517,7 +527,6 @@
 
       </div>
 
-      <!-- BOOKING -->
       <div id="screen_booking" class="scroll-content">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
           <div style="font-size:20px;cursor:pointer;" onclick="goto('dash')">←</div>
@@ -546,7 +555,6 @@
 
       </div>
 
-      <!-- action bar (floating) -->
       <div id="action_bar" role="dialog" aria-hidden="true">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <div class="small muted">How many seats?</div>
@@ -561,7 +569,6 @@
         </div>
       </div>
 
-      <!-- MY BOOKINGS -->
       <div id="screen_mybookings" class="scroll-content">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
           <div style="font-size:20px;cursor:pointer;" onclick="goto('dash')">←</div>
@@ -573,7 +580,6 @@
         </div>
       </div>
 
-      <!-- bottom nav (keeps intact) -->
       <div id="nav_bar" class="bottom-nav" style="display:none;">
         <div class="nav-icon active" onclick="goto('dash')" id="btn_nav_dash" aria-label="Home">
           <svg viewBox="0 0 24 24"><path d="M12 2L3 9V20H21V9L12 2ZM12 4.9L19 10.5V18H5V10.5L12 4.9ZM11 12H13V18H11V12Z"/></svg>
@@ -585,7 +591,6 @@
         </div>
       </div>
 
-      <!-- MODALS -->
       <div id="modal_recharge" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
         <div class="modal-content">
           <h3>Add Money</h3>
@@ -612,7 +617,6 @@
     </div>
   </div>
 
-  <!-- --- App logic (kept intact from your original file) --- -->
   <script>
     // --- FIREBASE CONFIGURATION & INITIALIZATION ---
     // NOTE: kept your config just like original file
@@ -690,6 +694,16 @@
         const s = document.getElementById('screen_' + screen);
         if (!s) return console.warn('Screen not found', screen);
         s.classList.add('active');
+
+        // FIX: Control the visibility of the wallet in the topbar
+        const walletDisplay = document.getElementById('header_wallet_display');
+        if (screen === 'login' || screen === 'signup') {
+            if (walletDisplay) walletDisplay.style.display = 'none';
+            document.getElementById('txt_welcome').innerText = 'Arena Login';
+        } else {
+            if (walletDisplay) walletDisplay.style.display = 'flex';
+        }
+
 
         document.getElementById('nav_bar').style.display = (screen === 'login' || screen === 'signup') ? 'none' : 'flex';
         document.getElementById('btn_nav_dash').classList.toggle('active', screen === 'dash');
@@ -771,6 +785,7 @@
 
     function startSession() {
         if(!db) return;
+        // This listener is critical for live balance updates
         db.ref('players/' + currentUserPhone).on('value', snap => {
             const d = snap.val();
             currentBalance = (d && d.wallet) ? d.wallet : 0;

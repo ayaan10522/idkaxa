@@ -359,16 +359,29 @@
         <div id="sec_transactions" class="section hidden">
             <h2>Transactions</h2>
             <div class="card">
+                <div class="card-header" style="flex-direction: column; align-items: flex-start;">
+                    <div class="card-title" style="margin-bottom: 10px;">Transaction History</div>
+                    <div class="row" style="margin-bottom: 0; width: 100%;">
+                        <input type="date" id="tx_filter_date" class="input" style="max-width: 180px;" onchange="loadTransactions()">
+                        <input id="tx_filter_mobile" class="input" placeholder="Filter by Mobile..." onkeyup="loadTransactions()">
+                        <select id="tx_filter_type" class="input" style="max-width: 180px;" onchange="loadTransactions()">
+                            <option value="">All Types</option>
+                            <option value="booking">Booking</option>
+                            <option value="admin_adjust">Admin Adjust</option>
+                            <option value="recharge_code">Recharge Code</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="table-container">
                     <table>
                         <thead><tr><th>Time</th><th>Mobile</th><th>Type</th><th>Amount</th><th>Detail</th></tr></thead>
                         <tbody id="tx_list"></tbody>
                     </table>
                 </div>
+                <div id="tx_loading" style="text-align:center; padding: 20px; color: var(--muted);" class="hidden">Loading all transactions...</div>
             </div>
         </div>
-
-    </main>
+        </main>
 
 <script>
     // --- FIREBASE INIT (Same config as before) ---
@@ -402,7 +415,15 @@
         el('sec_' + secId).classList.remove('hidden');
         
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
+        // Find the button that was clicked or the button corresponding to secId
+        let activeBtn;
+        if (event && event.target) {
+            activeBtn = event.target;
+        } else {
+            // Fallback for initial load
+            activeBtn = document.querySelector(`.nav-btn[onclick*="'${secId}'"]`);
+        }
+        if (activeBtn) activeBtn.classList.add('active');
 
         // Trigger Loads
         if(secId === 'dashboard') loadAnalytics();
@@ -412,6 +433,7 @@
         if(secId === 'players') loadPlayers();
         if(secId === 'codes') loadCodes();
         if(secId === 'maintenance') loadMaintenance();
+        // The transaction loading function is now different
         if(secId === 'transactions') loadTransactions();
     };
 
@@ -775,30 +797,91 @@
         showToast("Block Added");
     };
 
-    // --- 9. TRANSACTIONS ---
-    function loadTransactions() {
-        db.ref('transactions').limitToLast(50).on('value', snap => {
-            const tbody = el('tx_list');
-            tbody.innerHTML = '';
-            let arr = [];
-            snap.forEach(s => arr.push(s.val()));
-            arr.reverse();
+    // --- 9. TRANSACTIONS (REVISED FOR ALL RECORDS + FILTERING) ---
+    let allTransactions = [];
+    let isTxDataLoaded = false;
+    
+    // Helper to render the filtered list
+    function renderTransactions(transactions) {
+        const tbody = el('tx_list');
+        tbody.innerHTML = '';
 
-            arr.forEach(t => {
-                const date = new Date(t.createdAt).toLocaleString();
-                const isPos = t.amount > 0;
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="font-size:12px; color:#666;">${date}</td>
-                        <td>${t.username}</td>
-                        <td>${t.type}</td>
-                        <td style="color:${isPos ? 'var(--success)' : 'var(--danger)'}">₹${t.amount}</td>
-                        <td style="font-size:12px; color:#aaa;">${t.reason || t.code || ''}</td>
-                    </tr>
-                `;
-            });
+        if (transactions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">No transactions found or match the filter.</td></tr>';
+            return;
+        }
+
+        transactions.forEach(t => {
+            const date = new Date(t.createdAt).toLocaleString();
+            const isPos = t.amount > 0;
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-size:12px; color:#666;">${date}</td>
+                    <td>${t.username}</td>
+                    <td>${t.type}</td>
+                    <td style="color:${isPos ? 'var(--success)' : 'var(--danger)'}">₹${t.amount}</td>
+                    <td style="font-size:12px; color:#aaa;">${t.reason || t.code || ''}</td>
+                </tr>
+            `;
         });
     }
+
+    // Function to fetch ALL transactions ONCE
+    function fetchAllTransactions() {
+        if(isTxDataLoaded) {
+            renderTransactions(allTransactions);
+            return;
+        }
+
+        el('tx_loading').classList.remove('hidden');
+
+        // Fetch ALL transactions without limit
+        db.ref('transactions').on('value', snap => {
+            el('tx_loading').classList.add('hidden');
+            allTransactions = [];
+            snap.forEach(s => {
+                const t = s.val();
+                // Add the date component for easy filtering
+                t.date = new Date(t.createdAt).toISOString().split('T')[0];
+                allTransactions.push(t);
+            });
+            // Sort by creation time, newest first
+            allTransactions.sort((a,b) => b.createdAt - a.createdAt);
+            isTxDataLoaded = true;
+            loadTransactions(); // Call loadTransactions to apply any initial filters
+        });
+    }
+
+    window.loadTransactions = () => {
+        // If data hasn't been fetched yet, trigger the fetch
+        if(!isTxDataLoaded) {
+            fetchAllTransactions();
+            return;
+        }
+        
+        const mobileFilter = el('tx_filter_mobile').value.toLowerCase().trim();
+        const typeFilter = el('tx_filter_type').value;
+        const dateFilter = el('tx_filter_date').value;
+
+        // Start with the full, sorted list
+        let filtered = allTransactions;
+
+        // Apply filters
+        if(dateFilter) {
+            filtered = filtered.filter(t => t.date === dateFilter);
+        }
+
+        if(mobileFilter) {
+            filtered = filtered.filter(t => t.username && t.username.includes(mobileFilter));
+        }
+
+        if(typeFilter) {
+            filtered = filtered.filter(t => t.type === typeFilter);
+        }
+
+        renderTransactions(filtered);
+    };
+
 
     // Init
     showSection('dashboard');
